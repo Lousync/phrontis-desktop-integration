@@ -29,8 +29,8 @@ Phrontis 内核（应用本体）
 
 ## 目录
 
-- `docs/interface.md` —— 对外接口规格（草案）。**这是本仓库与应用之间唯一的契约。**
-- `gnome-extension/` —— GNOME Shell 扩展（**骨架，尚未实现**）。
+- `docs/interface.md` —— 对外接口规格（**v1 已实现**：Core1 核心通路）。**这是本仓库与应用之间唯一的契约。**
+- `gnome-extension/` —— GNOME Shell 扩展（**骨架**；等 Core1 跑通后实现 A+B）。
 - 原型（暂不入库）：`/home/lousync/Projects/Phrontis-linux/tmp/gnome-integration-proto/index.html`
 
 ## 三条硬原则
@@ -42,4 +42,5 @@ Phrontis 内核（应用本体）
 ## 状态
 
 - 2026-10-19 建档。接口为**草案**，扩展为**骨架**，均未实现。
+- 2026-10-20 **阶段 1 核心通路已落码**（应用侧）：Core1 的 `GetToday` / `ToggleTodo` / `CheckIn` / `OpenApp` / `Search` / `GetCapabilities` + `Changed`，托盘「今日」区，`phrontis-cli`，deb 注入（D-Bus 激活 + 卸载清理）。`PomodoroControl` 与 `OpenApp(relPath)` 为下一批；扩展仍是骨架。
 - 目标形态与校验原型见上；观感依据 = 开发机 GNOME Shell 50.1 的实际配置（Yaru 浅色 + 毛玻璃 + 圆角 + Inter 字体 + 蓝色强调色）。

@@ -37,3 +37,9 @@
 
 1. 正式版的深浅色：建议**跟随系统**（`org.gnome.desktop.interface color-scheme`），原型的深色开关只是给你看效果。
 2. 远端仓库尚未创建（本仓库只在本地）；名字定为 `phrontis-desktop-integration`。
+
+## 5. 实现状态（2026-10-20）
+
+- **阶段 1 核心通路已落码**（应用侧）：D-Bus `Core1`（除 `PomodoroControl`）、托盘「今日」区、`phrontis-cli`、deb 注入。
+- 验收与契约：应用仓库 `docs/desktop-integration-plan.md` + `.AGENT/scripts/desktop-integration/verify-desktop-bridge.mjs`。
+- 下一批：`PomodoroControl`（渲染层命令通道）、`OpenApp(relPath)`；之后才动 GNOME 扩展（A+B）。
