@@ -108,6 +108,8 @@ export default class PhrontisExtension extends Extension {
 
         this._day = null;
         this._busName = null;
+        this._todoSection = null;
+        this._habitSection = null;
     }
 
     // ---------- UI ----------
@@ -132,7 +134,7 @@ export default class PhrontisExtension extends Extension {
         this._button.menu.connect('open-state-changed', (_menu, open) => {
             if (!open) return;
             this._rebuildMenu();
-            this._refresh();
+            this._refresh(true);
         });
 
         // 贴快速设置（右侧）；index 0 = 右栏最左，紧挨快速设置
@@ -151,18 +153,36 @@ export default class PhrontisExtension extends Extension {
         Main.panel.statusArea.quickSettings.menu.addItem(this._tile);
     }
 
-    _sync() {
+    _sectionText() {
+        const day = this._day;
+        if (!day) return {todo: '待办', habit: '打卡'};
+        const pending = day.todos.filter(t => !t.done).length;
+        const habitsDone = day.habits.filter(h => h.doneToday).length;
+        return {
+            todo: `待办 · ${pending} 未完成`,
+            habit: `打卡 · ${habitsDone}/${day.habits.length}`,
+        };
+    }
+
+    /** 只更新读数（顶栏 / 磁贴 / 分组标题），不重建列表 —— 勾选时用，避免面板闪一下 */
+    _syncLabels() {
         const day = this._day;
         if (!day) {
             this._label.text = 'Phrontis';
             this._tile.subtitle = '未运行';
-            this._rebuildMenu();
             return;
         }
         const pending = day.todos.filter(t => !t.done).length;
         const habitsDone = day.habits.filter(h => h.doneToday).length;
         this._label.text = `今日 ${pending} 项 · 打卡 ${habitsDone}/${day.habits.length}`;
         this._tile.subtitle = `${pending} 项待办 · 打卡 ${habitsDone}/${day.habits.length}`;
+        const text = this._sectionText();
+        if (this._todoSection) this._todoSection.label.text = text.todo;
+        if (this._habitSection) this._habitSection.label.text = text.habit;
+    }
+
+    _applyDay() {
+        this._syncLabels();
         this._rebuildMenu();
     }
 
@@ -170,6 +190,8 @@ export default class PhrontisExtension extends Extension {
         const menu = this._button?.menu;
         if (!menu) return;
         menu.removeAll();
+        this._todoSection = null;
+        this._habitSection = null;
 
         if (!this._day) {
             menu.addMenuItem(new PopupMenu.PopupMenuItem('Phrontis 未运行', {reactive: false}));
@@ -183,7 +205,7 @@ export default class PhrontisExtension extends Extension {
         header.add_style_class_name('phrontis-meta');
         menu.addMenuItem(header);
 
-        this._addSection(menu, '待办');
+        this._todoSection = this._addSection(menu, this._sectionText().todo);
         const todos = this._day.todos.slice(0, MAX_TODOS);
         if (todos.length === 0) {
             this._addEmpty(menu, '今天没有待办');
@@ -196,7 +218,7 @@ export default class PhrontisExtension extends Extension {
 
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        this._addSection(menu, '打卡');
+        this._habitSection = this._addSection(menu, this._sectionText().habit);
         if (this._day.habits.length === 0) {
             this._addEmpty(menu, '还没有习惯');
         } else {
@@ -224,6 +246,7 @@ export default class PhrontisExtension extends Extension {
         const item = new PopupMenu.PopupMenuItem(text, {reactive: false});
         item.add_style_class_name('phrontis-section');
         menu.addMenuItem(item);
+        return item;
     }
 
     _addEmpty(menu, text) {
@@ -234,10 +257,11 @@ export default class PhrontisExtension extends Extension {
 
     _todoItem(todo) {
         const item = new PopupMenu.PopupBaseMenuItem();
-        item.add_child(new St.Icon({
+        const icon = new St.Icon({
             icon_name: todo.done ? 'checkbox-checked-symbolic' : 'checkbox-symbolic',
             style_class: 'popup-menu-icon',
-        }));
+        });
+        item.add_child(icon);
         const label = new St.Label({
             text: todo.text,
             x_expand: true,
@@ -246,16 +270,21 @@ export default class PhrontisExtension extends Extension {
         });
         label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
         item.add_child(label);
-        item.connect('activate', () => this._toggleTodo(todo.id));
+        item.connect('activate', () => {
+            this._toggleTodo(todo.id, icon);
+            // 不关面板：拦掉 PopupMenu 的 itemActivated（否则点一条就收起）
+            item.stop_emission_by_name('activate');
+        });
         return item;
     }
 
     _habitItem(habit) {
         const item = new PopupMenu.PopupBaseMenuItem();
-        item.add_child(new St.Icon({
+        const icon = new St.Icon({
             icon_name: habit.doneToday ? 'checkbox-checked-symbolic' : 'checkbox-symbolic',
             style_class: 'popup-menu-icon',
-        }));
+        });
+        item.add_child(icon);
         const label = new St.Label({
             text: habit.name,
             x_expand: true,
@@ -271,7 +300,10 @@ export default class PhrontisExtension extends Extension {
                 y_align: Clutter.ActorAlign.CENTER,
             }));
         }
-        item.connect('activate', () => this._checkIn(habit.id, !habit.doneToday));
+        item.connect('activate', () => {
+            this._checkIn(habit.id, !habit.doneToday, icon);
+            item.stop_emission_by_name('activate');
+        });
         return item;
     }
 
@@ -325,7 +357,7 @@ export default class PhrontisExtension extends Extension {
         });
     }
 
-    async _refresh() {
+    async _refresh(force = false) {
         const seq = ++this._requestSeq;
         let busName = null;
         let day = null;
@@ -348,31 +380,81 @@ export default class PhrontisExtension extends Extension {
 
         this._busName = busName;
         this._day = day;
-        this._sync();
+        // 面板打开时只更新读数：重建列表会打断勾选动画/滚动位置；
+        // 外部改动等下次打开或关闭后刷新。
+        if (force || !day || !this._button?.menu.isOpen)
+            this._applyDay();
+        else
+            this._syncLabels();
     }
 
-    async _toggleTodo(id) {
+    /** 勾选反馈：图标放大回弹（只动 transform，符合 GNOME 动效习惯） */
+    _popIcon(icon) {
+        if (!icon) return;
+        icon.set_pivot_point(0.5, 0.5);
+        icon.ease({
+            scale_x: 1.3, scale_y: 1.3, duration: 90,
+            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            onComplete: () => icon.ease({
+                scale_x: 1, scale_y: 1, duration: 140,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            }),
+        });
+    }
+
+    async _toggleTodo(id, icon) {
         if (!this._busName) return;
+        const todo = this._day?.todos.find(t => t.id === id);
+        if (!todo) return;
+
+        // 乐观更新：先换图标 + 更新计数，D-Bus 失败再回滚
+        const prev = todo.done;
+        todo.done = !prev;
+        if (icon) icon.icon_name = todo.done ? 'checkbox-checked-symbolic' : 'checkbox-symbolic';
+        this._popIcon(icon);
+        this._syncLabels();
+
         try {
             const v = await this._call(this._busName, 'ToggleTodo',
                 new GLib.Variant('(s)', [id]), BOOL_TYPE, Gio.DBusCallFlags.NONE);
-            if (!v.deepUnpack()[0])
+            if (!v.deepUnpack()[0]) {
+                todo.done = prev;
+                if (icon) icon.icon_name = prev ? 'checkbox-checked-symbolic' : 'checkbox-symbolic';
+                this._syncLabels();
                 Main.notify('Phrontis', '这条待办已经不存在了');
-            await this._refresh();
+            }
         } catch (e) {
+            todo.done = prev;
+            if (icon) icon.icon_name = prev ? 'checkbox-checked-symbolic' : 'checkbox-symbolic';
+            this._syncLabels();
             this._fail('勾选失败', e);
         }
     }
 
-    async _checkIn(habitId, value) {
+    async _checkIn(habitId, value, icon) {
         if (!this._busName) return;
+        const habit = this._day?.habits.find(h => h.id === habitId);
+        if (!habit) return;
+
+        const prev = habit.doneToday;
+        habit.doneToday = value;
+        if (icon) icon.icon_name = value ? 'checkbox-checked-symbolic' : 'checkbox-symbolic';
+        this._popIcon(icon);
+        this._syncLabels();
+
         try {
             const v = await this._call(this._busName, 'CheckIn',
                 new GLib.Variant('(sb)', [habitId, value]), BOOL_TYPE, Gio.DBusCallFlags.NONE);
-            if (!v.deepUnpack()[0])
+            if (!v.deepUnpack()[0]) {
+                habit.doneToday = prev;
+                if (icon) icon.icon_name = prev ? 'checkbox-checked-symbolic' : 'checkbox-symbolic';
+                this._syncLabels();
                 Main.notify('Phrontis', '这个习惯已经不存在了');
-            await this._refresh();
+            }
         } catch (e) {
+            habit.doneToday = prev;
+            if (icon) icon.icon_name = prev ? 'checkbox-checked-symbolic' : 'checkbox-symbolic';
+            this._syncLabels();
             this._fail('打卡失败', e);
         }
     }
