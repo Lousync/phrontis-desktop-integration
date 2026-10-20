@@ -137,8 +137,8 @@ export default class PhrontisExtension extends Extension {
             this._refresh(true);
         });
 
-        // 贴快速设置（右侧）；index 0 = 右栏最左，紧挨快速设置
-        Main.panel.addToStatusArea(this.uuid, this._button, 0, 'right');
+        // 常驻入口位：左栏最左（0 = 左栏第一个）；速查按钮会排在它后面
+        Main.panel.addToStatusArea(this.uuid, this._button, 0, 'left');
         this._rebuildMenu();
     }
 
