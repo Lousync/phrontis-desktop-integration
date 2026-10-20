@@ -41,5 +41,8 @@
 ## 5. 实现状态（2026-10-20）
 
 - **阶段 1 核心通路已落码**（应用侧）：D-Bus `Core1`（除 `PomodoroControl`）、托盘「今日」区、`phrontis-cli`、deb 注入。
+- **阶段 2（A+B）扩展 v1 已落码**：顶栏「图标 + 今日 N 项 · 打卡 M/K」+ 弹出面板（勾待办 / 打卡 / 打开应用）、快速设置磁贴（同源读数）。
+  - 只在 headless GNOME 50.1 里验证过 `enable()` 与面板/磁贴构造；**Wayland 实机需重新登录后看效果**。
+  - 已发现并修掉一处 GNOME 50 API 变化：磁贴要挂到 `statusArea.quickSettings.menu`（`addExternalIndicator` 已移除）。
+  - 番茄钟仍只显示状态，控制等 `PomodoroControl`。
 - 验收与契约：应用仓库 `docs/desktop-integration-plan.md` + `.AGENT/scripts/desktop-integration/verify-desktop-bridge.mjs`。
-- 下一批：`PomodoroControl`（渲染层命令通道）、`OpenApp(relPath)`；之后才动 GNOME 扩展（A+B）。

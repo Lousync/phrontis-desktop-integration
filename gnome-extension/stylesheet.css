@@ -1,0 +1,34 @@
+/* Phrontis 扩展样式：只做间距与等宽数字，颜色一律继承主题（深色/浅色都成立） */
+
+.phrontis-panel-box {
+  spacing: 5px;
+}
+
+.phrontis-panel-label {
+  font-feature-settings: "tnum";
+}
+
+.phrontis-menu {
+  min-width: 330px;
+}
+
+.phrontis-section {
+  padding: 4px 12px 2px;
+  opacity: 0.62;
+  font-size: 0.85em;
+}
+
+.phrontis-meta {
+  opacity: 0.65;
+  font-size: 0.9em;
+}
+
+.phrontis-empty {
+  padding: 2px 12px 6px;
+  opacity: 0.6;
+  font-size: 0.9em;
+}
+
+.phrontis-ellipsis {
+  max-width: 240px;
+}

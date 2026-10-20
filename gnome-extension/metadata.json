@@ -1,8 +1,8 @@
 {
   "uuid": "phrontis@lousync.github.io",
   "name": "Phrontis",
-  "description": "在顶栏查看今日待办与打卡，并直接勾选 / 打卡 / 控制番茄钟。数据来自 Phrontis 应用的 D-Bus 接口。",
-  "shell-version": ["50"],
+  "description": "今日入口：顶栏读数 + 弹出面板，以及快速设置磁贴。只通过 D-Bus Core1 读数据、做轻动作，不接触仓库文件。",
+  "shell-version": ["45", "46", "47", "48", "49", "50"],
   "url": "https://github.com/Lousync/phrontis-desktop-integration",
-  "version-name": "0.1.0"
+  "version": 1
 }

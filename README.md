@@ -30,7 +30,7 @@ Phrontis 内核（应用本体）
 ## 目录
 
 - `docs/interface.md` —— 对外接口规格（**v1 已实现**：Core1 核心通路）。**这是本仓库与应用之间唯一的契约。**
-- `gnome-extension/` —— GNOME Shell 扩展（**骨架**；等 Core1 跑通后实现 A+B）。
+- `gnome-extension/` —— GNOME Shell 扩展（**v1 已实现**：顶栏入口 A + 快速设置磁贴 B；Wayland 下需重新登录加载）。
 - 原型（暂不入库）：`/home/lousync/Projects/Phrontis-linux/tmp/gnome-integration-proto/index.html`
 
 ## 三条硬原则
