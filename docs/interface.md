@@ -29,7 +29,8 @@ Pomo  = (i state, i leftSeconds, i totalSeconds)         → (iii)   // 0 idle /
 Day   = (s date, a(Todo), a(Habit), Pomo)                → (sa(ssbsi)a(ssbii)(iii))
 ```
 
-> `due` 是日期串（`YYYY-MM-DD`），逾期由 `due < date && !done` 推出。
+> `GetToday` 的 `todos` 口径（2026-10-20 拍板 A）：**今天到期 + 逾期未完成**；
+> 不含「待安排」计划类、已完成、子任务。`due` 是日期串（`YYYY-MM-DD`），逾期由 `due < date` 推出。
 > `totalSeconds` 目前由 `leftSeconds / (1 - progress)` 反推；阶段 2 改为渲染层直接上报精确值。
 
 ## 3. 方法
