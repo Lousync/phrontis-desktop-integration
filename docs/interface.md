@@ -42,7 +42,8 @@ Day   = (s date, a(Todo), a(Habit), Pomo)                → (sa(ssbsi)a(ssbii)(
 | `PomodoroControl` | `(s action) -> (Pomo)` | **下一批**。`action ∈ {start, pause, resume, reset}`。 |
 | `OpenApp` | `(s target) -> (b)` | 唤起窗口。`target` = `''` / `today` / `pomodoro`；`relPath` **下一批**（现在返回 `false`）。 |
 | `Search` | `(s query, i limit) -> (as)` | 只搜标题 / 正文 / 标签，返回 `relPath` 列表（最多 50）。 |
-| `GetCapabilities` | `() -> (as)` | `['today','todo','checkin','search','open']`。消费方据此探测，**不要拿版本号猜**。 |
+| `ToggleDayPanel` | `() -> (b)` | 显示 / 隐藏日程小窗。GNOME 扩展的原生快捷键走这里（XWayland 下 Electron 的全局键不可靠）。 |
+| `GetCapabilities` | `() -> (as)` | `['today','todo','checkin','search','open','dayPanel']`。消费方据此探测，**不要拿版本号猜**。 |
 
 ## 4. 信号
 
@@ -64,6 +65,7 @@ phrontis-cli todo done <id> | undo <id>          # 幂等：先读 GetToday，�
 phrontis-cli checkin <习惯名|id> | uncheck <习惯名|id>
 phrontis-cli search <query> [--limit 20] [--json]
 phrontis-cli open [today|pomodoro]
+phrontis-cli daypanel
 phrontis-cli capabilities [--json]
 ```
 

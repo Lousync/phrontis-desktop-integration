@@ -45,4 +45,6 @@
   - 只在 headless GNOME 50.1 里验证过 `enable()` 与面板/磁贴构造；**Wayland 实机需重新登录后看效果**。
   - 已发现并修掉一处 GNOME 50 API 变化：磁贴要挂到 `statusArea.quickSettings.menu`（`addExternalIndicator` 已移除）。
   - 番茄钟仍只显示状态，控制等 `PomodoroControl`。
+  - **快捷键**：`Ctrl+Alt+S` 由扩展用 Mutter 原生 keybinding 注册（自带 GSettings schema），Wayland 下有效；
+    Electron 的 X11 全局键只作扩展未启用时的兜底。应用托盘菜单另有「日程小窗」入口。
 - 验收与契约：应用仓库 `docs/desktop-integration-plan.md` + `.AGENT/scripts/desktop-integration/verify-desktop-bridge.mjs`。

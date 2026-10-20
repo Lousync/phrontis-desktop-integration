@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.phrontis" path="/org/gnome/shell/extensions/phrontis/">
+    <key name="toggle-day-panel" type="as">
+      <default>['&lt;Control&gt;&lt;Alt&gt;s']</default>
+      <summary>显示 / 隐藏 Phrontis 日程小窗</summary>
+      <description>
+        由 Mutter 直接处理的全局快捷键（Wayland 下也有效）。
+        应用内 Electron 的 X11 全局键只在 XWayland 窗口有焦点时才收得到，留作扩展未启用时的兜底。
+      </description>
+    </key>
+  </schema>
+</schemalist>

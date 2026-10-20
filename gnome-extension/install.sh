@@ -17,6 +17,11 @@ fi
 DEST="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/$UUID"
 mkdir -p "$DEST"
 cp "$HERE/metadata.json" "$HERE/extension.js" "$HERE/stylesheet.css" "$DEST/"
+if [ -d "$HERE/schemas" ]; then
+    mkdir -p "$DEST/schemas"
+    cp "$HERE"/schemas/*.xml "$DEST/schemas/"
+    glib-compile-schemas "$DEST/schemas"
+fi
 
 echo "已安装到: $DEST"
 if gnome-extensions enable "$UUID" 2>/dev/null; then

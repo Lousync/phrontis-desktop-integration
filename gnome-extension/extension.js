@@ -10,6 +10,8 @@
 // 注意：GNOME 50 移除了 addExternalIndicator，磁贴直接挂到 quickSettings 菜单。
 
 import Gio from 'gi://Gio';
+import Meta from 'gi://Meta';
+import Shell from 'gi://Shell';
 import GLib from 'gi://GLib';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
@@ -70,6 +72,7 @@ export default class PhrontisExtension extends Extension {
         this._buildPanel();
         this._buildTile();
         this._subscribe();
+        this._bindKeys();
 
         this._timer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, REFRESH_SECONDS, () => {
             this._refresh();
@@ -80,6 +83,7 @@ export default class PhrontisExtension extends Extension {
     }
 
     disable() {
+        this._unbindKeys();
         this._requestSeq++;   // 让在途请求的结果失效
 
         if (this._timer) {
@@ -271,6 +275,25 @@ export default class PhrontisExtension extends Extension {
         return item;
     }
 
+    // ---------- 原生快捷键（Wayland 下也有效） ----------
+
+    _bindKeys() {
+        this._settings = this.getSettings('org.gnome.shell.extensions.phrontis');
+        Main.wm.addKeybinding('toggle-day-panel', this._settings,
+            Meta.KeyBindingFlags.NONE,
+            Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
+            () => this._toggleDayPanel());
+    }
+
+    _unbindKeys() {
+        try {
+            Main.wm.removeKeybinding('toggle-day-panel');
+        } catch {
+            // 未注册成功时 remove 会抛，忽略
+        }
+        this._settings = null;
+    }
+
     // ---------- D-Bus ----------
 
     _subscribe() {
@@ -352,6 +375,24 @@ export default class PhrontisExtension extends Extension {
         } catch (e) {
             this._fail('打卡失败', e);
         }
+    }
+
+    async _toggleDayPanel() {
+        const candidates = [...new Set([this._busName, BUS_PACKAGED, BUS_DEV].filter(Boolean))];
+        for (const name of candidates) {
+            try {
+                await this._call(name, 'ToggleDayPanel', null, BOOL_TYPE, Gio.DBusCallFlags.NONE);
+                // 小窗开合后稍等一拍再刷读数（避免读到开合前的状态）
+                GLib.timeout_add(GLib.PRIORITY_DEFAULT, 400, () => {
+                    this._refresh();
+                    return GLib.SOURCE_REMOVE;
+                });
+                return;
+            } catch {
+                // 试下一个总线名
+            }
+        }
+        Main.notify('Phrontis', '找不到正在运行的应用');
     }
 
     async _openApp() {

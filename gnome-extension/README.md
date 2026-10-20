@@ -20,6 +20,14 @@
 gnome-extensions info phrontis@lousync.github.io
 ```
 
+## 快捷键
+
+`Ctrl+Alt+S`：显示 / 隐藏 Phrontis 日程小窗。
+
+- 由 **Mutter** 直接处理（`Main.wm.addKeybinding` + 扩展自带 GSettings schema），**Wayland 下也有效**。
+- 应用内 Electron 的 X11 全局键只在 XWayland 窗口有焦点时才收得到，仅在扩展未启用时作为兜底。
+- 改键：`gsettings --schemadir ~/.local/share/gnome-shell/extensions/phrontis@lousync.github.io/schemas set org.gnome.shell.extensions.phrontis toggle-day-panel "['<Super><Alt>s']"`
+
 ## 开发
 
 - 应用没装、只有 `npm run dev` 在跑时，扩展会自动回退到总线名
