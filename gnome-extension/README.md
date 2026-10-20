@@ -31,6 +31,21 @@ gnome-extensions info phrontis@lousync.github.io
 gnome-extensions pack . --out-dir=dist
 ```
 
+### ⚠ headless 测试的副作用（踩过一次）
+
+用 `timeout` 强杀 `gnome-shell --headless` 时，GNOME 会把它记成一次**启动失败**，在
+`/run/user/$UID/gnome-shell-disable-extensions` 留下标记；**下次登录会禁用所有用户扩展**
+（表象：顶栏变回原生样式、所有定制全部消失，但扩展目录和设置都还在）。
+
+测试完务必清掉：
+
+```bash
+rm -f /run/user/$UID/gnome-shell-disable-extensions
+gsettings set org.gnome.shell disable-user-extensions false
+```
+
+改这个键后 Shell 会**实时重载**扩展，不需要再登出一次。
+
 ## 当前边界
 
 - 番茄钟**只显示状态**，控制（开始/暂停/重置）等应用侧 `PomodoroControl` 落地后再接。
